@@ -5,6 +5,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Setup(r *gin.Engine) {
-	r.GET("/", handlers.Handler)
+func AccountRoutes(r *gin.Engine) {
+	r.GET("/account", handlers.GetAccounts)
+	r.GET("/account/:id", handlers.GetAccountByID)
+	r.POST("/account", handlers.CreateAccount)
+	r.PATCH("/account/:id", handlers.UpdateAccount)
+	r.DELETE("/account/:id", handlers.DeleteAccount)
 }
