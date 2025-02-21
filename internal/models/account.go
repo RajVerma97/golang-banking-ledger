@@ -21,5 +21,8 @@ type Account struct {
 	UpdatedAt       time.Time `json:"updatedAt"`
 }
 
- 
+type AccountUpdate struct {
+	Balance *float64 `json:"balance,omitempty"`
+}
 
+type Accounts []Account

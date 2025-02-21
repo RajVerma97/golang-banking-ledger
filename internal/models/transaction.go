@@ -19,12 +19,12 @@ const (
 )
 
 type Transaction struct {
-	ID          uuid.UUID         `json:"id"`
-	Type        TransactionType   `json:"type"`
-	Amount      float64           `json:"amount"`
-	AccountID   uuid.UUID         `json:"accountID"`
-	Status      TransactionStatus `json:"status"`
-	CreatedAt   time.Time         `json:"createdAt"`
-	UpdatedAt   time.Time         `json:"updatedAt"`
-	ProcessedAt time.Time         `json:"proccessedAt"`
+	ID          uuid.UUID         `json:"id" bson:"_id,omitempty"`
+	Type        TransactionType   `json:"type" bson:"type"`
+	Amount      float64           `json:"amount" bson:"amount"`
+	AccountID   uuid.UUID         `json:"accountID" bson:"accountID"`
+	Status      TransactionStatus `json:"status" bson:"status"`
+	CreatedAt   time.Time         `json:"createdAt" bson:"createdAt"`
+	UpdatedAt   time.Time         `json:"updatedAt" bson:"updatedAt"`
+	ProcessedAt time.Time         `json:"processedAt,omitempty" bson:"processedAt,omitempty"`
 }

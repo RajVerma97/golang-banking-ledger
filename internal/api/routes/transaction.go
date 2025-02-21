@@ -5,11 +5,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func TransactionRoutes(r *gin.Engine) {
-	r.GET("/transaction", handlers.GetTransactions)
-	r.GET("/transaction/:id", handlers.GetTransactionByID)
-	r.POST("/transaction", handlers.CreateTransaction)
-	r.PATCH("/transaction/:id", handlers.UpdateTransaction)
-	r.DELETE("/transaction/:id", handlers.DeleteTransaction)
+func TransactionRoutes(r *gin.Engine, transactionHandler *handlers.TransactionHandler) {
+	r.GET("/transaction", transactionHandler.GetTransactions)
+	r.GET("/transaction/:id", transactionHandler.GetTransactionByID)
+	r.POST("/transaction", transactionHandler.CreateTransaction)
+	r.PATCH("/transaction/:id", transactionHandler.UpdateTransaction)
+	r.DELETE("/transaction/:id", transactionHandler.DeleteTransaction)
 
 }
