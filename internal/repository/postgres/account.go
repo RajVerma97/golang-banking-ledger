@@ -6,6 +6,7 @@ import (
 	"github.com/RajVerma97/golang-banking-ledger/internal/models"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"log"
 	"time"
 )
 
@@ -51,6 +52,9 @@ func (r *AccountRepository) Update(ctx context.Context, id uuid.UUID, updates mo
 	}
 	if updates.Phone != nil {
 		updateData["phone"] = *updates.Phone
+	}
+	if updates.Balance != nil {
+		updateData["balance"] = *updates.Balance
 	}
 
 	updateData["updated_at"] = time.Now()

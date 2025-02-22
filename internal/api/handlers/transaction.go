@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"time"
 
@@ -60,14 +59,23 @@ func (h *TransactionHandler) CreateTransaction(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid account ID format"})
 		return
 	}
-	//
-	// var account models.Account
-	// if account, err = h.accountService.GetByID(context.Background(), accountUUID); err != nil {
-	// 	c.JSON(http.StatusNotFound, gin.H{"error": "account not found"})
-	// 	return
-	// }
-	//
+
+	var account models.Account
+	if account, err = h.accountService.GetByID(context.Background(), accountUUID); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "account not found"})
+		return
+	}
+
+	if newTransaction.Type == models.WITHDRAWL && account.Balance < newTransaction.Amount {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "insufficient funds"})
+		return
+	}
 	h.initializeTransaction(&newTransaction, accountUUID)
+
+	if err := h.transactionService.Create(c, &newTransaction); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create transaction"})
+		return
+	}
 
 	if err := h.transactionService.PublishTransactionEvent(c, &newTransaction); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to publish transaction event"})
@@ -84,26 +92,4 @@ func (h *TransactionHandler) initializeTransaction(transaction *models.Transacti
 	transaction.CreatedAt = time.Now()
 	transaction.UpdatedAt = time.Now()
 
-}
-func (h *TransactionHandler) processTransaction(tx *models.Transaction, account models.Account) error {
-	switch tx.Type {
-	case models.WITHDRAWL:
-		if tx.Amount > account.Balance {
-			tx.Status = models.FAILED
-			return errors.New("withdrawal failed, insufficient balance")
-		}
-		if err := h.accountService.Withdraw(context.Background(), uuid.MustParse(tx.AccountID), tx.Amount); err != nil {
-			tx.Status = models.FAILED
-			return errors.New("withdrawal failed")
-		}
-
-	case models.DEPOSIT:
-		if err := h.accountService.Deposit(context.Background(), uuid.MustParse(tx.AccountID), tx.Amount); err != nil {
-			tx.Status = models.FAILED
-			return errors.New("deposit failed")
-		}
-	}
-
-	tx.Status = models.SUCCESS
-	return nil
 }

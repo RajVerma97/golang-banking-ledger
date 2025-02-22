@@ -19,8 +19,6 @@ type TransactionRepository interface {
 	Create(ctx context.Context, tx *models.Transaction) error
 	GetByID(ctx context.Context, id string) (*models.Transaction, error)
 	GetByAccountID(ctx context.Context, accountID string) ([]models.Transaction, error)
-	// Update(ctx context.Context, id string, tx *models.Transaction) error
-	UpdateBalance(ctx context.Context, id string, amount float64) error
 }
 
 func NewTransactionService(transactionRepo TransactionRepository, accountRepo AccountRepository, rabbitMQChannel *amqp.Channel) *TransactionService {
@@ -48,9 +46,6 @@ func (ts *TransactionService) GetByAccountID(ctx context.Context, accountID stri
 	return ts.transactionRepo.GetByAccountID(ctx, accountID)
 }
 
-func (ts *TransactionService) Update(ctx context.Context, id string, amount float64) error {
-	return ts.transactionRepo.Update(ctx, id, amount)
-}
 func (ts *TransactionService) PublishTransactionEvent(ctx context.Context, transaction *models.Transaction) error {
 	body, err := json.Marshal(transaction)
 	if err != nil {

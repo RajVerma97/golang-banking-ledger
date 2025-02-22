@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -30,7 +31,7 @@ func NewTransactionWorker(rabbitMQChannel *amqp.Channel, accountRepo *postgres.A
 
 func (w *Worker) ProcessTransactions() {
 	msgs, err := w.rabbitMQChannel.Consume(
-		"transaction_queue", "", true, false, false, false, nil,
+		"transaction_queue", "", false, false, false, false, nil,
 	)
 	if err != nil {
 		log.Fatalf("Failed to consume messages: %v", err)
@@ -45,54 +46,79 @@ func (w *Worker) processMessage(msg amqp.Delivery) {
 	var tx models.Transaction
 	if err := json.Unmarshal(msg.Body, &tx); err != nil {
 		log.Printf("Error decoding transaction message: %v", err)
+		msg.Nack(false, true)
 		return
 	}
 
 	log.Printf("Processing transaction: %s", tx.ID)
-	w.handleTransaction(&tx)
+
+	err := w.handleTransaction(&tx)
+
+	if err != nil {
+		log.Printf("Transaction processing failed: %v", err)
+		msg.Nack(false, true)
+		return
+	}
+
+	msg.Ack(false)
 }
 
-func (w *Worker) handleTransaction(tx *models.Transaction) {
+func (w *Worker) handleTransaction(tx *models.Transaction) error {
 	ctx := context.Background()
 
-	account, err := w.accountRepo.GetByID(ctx, uuid.MustParse(tx.AccountID))
+	existingTx, err := w.transactionRepo.GetByID(ctx, tx.ID)
+	if err == nil && existingTx.Status != models.PENDING {
+		log.Printf("Transaction %s already processed with status %s", tx.ID, existingTx.Status)
+		return nil
+	}
 
-	log.Println("account:")
-	log.Println(account)
+	account, err := w.accountRepo.GetByID(ctx, uuid.MustParse(tx.AccountID))
 	if err != nil {
 		log.Printf("Account not found: %s", tx.AccountID)
 		tx.Status = models.FAILED
 		w.updateTransaction(ctx, tx)
-		return
+		return errors.New("account not found")
 	}
 
 	if err := w.processTransactionLogic(tx, &account); err != nil {
 		tx.Status = models.FAILED
-	} else {
-		tx.Status = models.SUCCESS
+		log.Printf("Error processing transaction: %v", err)
+		w.updateTransaction(ctx, tx)
+		return err
 	}
 
+	tx.Status = models.SUCCESS
 	w.updateTransaction(ctx, tx)
+
+	return nil
 }
 func (w *Worker) processTransactionLogic(tx *models.Transaction, account *models.Account) error {
-	log.Println("handle trnaasaaction logic")
+
 	switch tx.Type {
 	case models.DEPOSIT:
 		account.Balance += tx.Amount
-
 	case models.WITHDRAWL:
 		if account.Balance < tx.Amount {
-			log.Println("Insufficient funds")
+			log.Printf("Insufficient funds: current balance %f, withdrawal amount %f", account.Balance, tx.Amount)
 			return errors.New("insufficient funds")
 		}
 		account.Balance -= tx.Amount
-
 	default:
 		log.Printf("Unknown transaction type: %s", tx.Type)
 		return errors.New("invalid transaction type")
 	}
-	log.Printf("Balance after transaction: %f,accoutID:%d", account.Balance, account.ID)
-	return w.accountRepo.UpdateBalance(context.Background(), account.ID, account.Balance)
+
+	updates := models.AccountUpdate{
+		Balance: &account.Balance,
+	}
+
+	if err := w.accountRepo.Update(context.Background(), account.ID, updates); err != nil {
+		log.Printf("Failed to update account balance: %v", err)
+		return fmt.Errorf("failed to update account balance: %w", err)
+	}
+
+	log.Printf("Successfully updated balance to %f for account %s", account.Balance, account.ID)
+	return nil
 }
 
 func (w *Worker) updateTransaction(ctx context.Context, tx *models.Transaction) {
