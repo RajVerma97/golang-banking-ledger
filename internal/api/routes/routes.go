@@ -8,7 +8,7 @@ import (
 
 func Setup(r *gin.Engine, accountService *service.AccountService, transactionService *service.TransactionService) {
 	accountHandler := handlers.NewAccountHandler(accountService)
-	transactionHandler := handlers.NewTransactionHandler(transactionService)
+	transactionHandler := handlers.NewTransactionHandler(transactionService, accountService)
 	AccountRoutes(r, accountHandler)
 	TransactionRoutes(r, transactionHandler)
 }

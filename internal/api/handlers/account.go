@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"math/rand"
 	"net/http"
+	"time"
 
 	"github.com/RajVerma97/golang-banking-ledger/internal/models"
 	"github.com/RajVerma97/golang-banking-ledger/internal/service"
@@ -28,8 +30,8 @@ func (accountHandler *AccountHandler) GetAccounts(c *gin.Context) {
 
 func (accountHandler *AccountHandler) GetAccountByID(c *gin.Context) {
 
-	accountIDStr := c.Param["id"]
-	id, err := uuid.Parse("id")
+	accountIDStr := c.Param("id")
+	id, err := uuid.Parse(accountIDStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid account ID"})
 		return
@@ -42,20 +44,36 @@ func (accountHandler *AccountHandler) GetAccountByID(c *gin.Context) {
 	c.JSON(http.StatusOK, account)
 }
 func (accountHandler *AccountHandler) CreateAccount(c *gin.Context) {
+	var newAccountRequest models.AccountCreate
 
-	var newAccount models.Account
-
-	if err := c.ShouldBindJSON(&newAccount); err != nil {
+	if err := c.ShouldBindJSON(&newAccountRequest); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 		return
 	}
-	newAccount.ID = uuid.New()
+
+	newAccount := models.Account{
+		ID:            uuid.New(),
+		AccountNumber: generateAccountNumber(),
+		FirstName:     newAccountRequest.FirstName,
+		LastName:      newAccountRequest.LastName,
+		Email:         newAccountRequest.Email,
+		Phone:         newAccountRequest.Phone,
+		Balance:       newAccountRequest.Balance,
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+	}
+
 	if err := accountHandler.accountService.Create(c, &newAccount); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create account"})
 		return
 	}
-	c.JSON(http.StatusCreated, newAccount)
 
+	c.JSON(http.StatusCreated, newAccount)
+}
+
+func generateAccountNumber() int {
+	random := rand.New(rand.NewSource(time.Now().UnixNano()))
+	return random.Intn(900000) + 100000
 }
 func (accountHandler *AccountHandler) UpdateAccount(c *gin.Context) {
 	accountIDStr := c.Param("id")
@@ -71,10 +89,16 @@ func (accountHandler *AccountHandler) UpdateAccount(c *gin.Context) {
 		return
 	}
 
+	if updateData.FirstName == nil && updateData.LastName == nil && updateData.Phone == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "at least one valid field must be provided"})
+		return
+	}
+
 	if err := accountHandler.accountService.Update(c, id, updateData); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update account"})
 		return
 	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "account updated successfully"})
 }
 

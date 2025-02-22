@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func InitMongo() (*mongo.Client, *mongo.Database, *mongo.Collection, error) {
+func InitMongo() (*mongo.Database, *mongo.Collection, error) {
 	if err := godotenv.Load(); err != nil {
 		log.Println(" Warning: No .env file found, using system environment variables.")
 	}
@@ -28,13 +28,13 @@ func InitMongo() (*mongo.Client, *mongo.Database, *mongo.Collection, error) {
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
 		log.Fatal(" Failed to connect to MongoDB: ", err)
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	err = client.Ping(ctx, nil)
 	if err != nil {
 		log.Fatal(" MongoDB connection test failed: ", err)
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	fmt.Println(" Connected to MongoDB")
@@ -42,5 +42,5 @@ func InitMongo() (*mongo.Client, *mongo.Database, *mongo.Collection, error) {
 	db := client.Database("banking")
 	collection := db.Collection("transactions")
 
-	return client, db, collection, nil
+	return db, collection, nil
 }

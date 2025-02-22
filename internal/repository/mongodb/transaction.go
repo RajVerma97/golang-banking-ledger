@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/RajVerma97/golang-banking-ledger/internal/models"
-	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -27,9 +26,9 @@ func (r *TransactionRepository) Create(ctx context.Context, tx *models.Transacti
 	return nil
 }
 
-func (r *TransactionRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Transaction, error) {
+func (r *TransactionRepository) GetByID(ctx context.Context, id string) (*models.Transaction, error) {
 	var tx models.Transaction
-	err := r.collection.FindOne(ctx, bson.M{"id": id}).Decode(&tx)
+	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&tx)
 	if err == mongo.ErrNoDocuments {
 		return nil, fmt.Errorf("transaction not found")
 	} else if err != nil {
@@ -38,7 +37,7 @@ func (r *TransactionRepository) GetByID(ctx context.Context, id uuid.UUID) (*mod
 	return &tx, nil
 }
 
-func (r *TransactionRepository) GetByAccountID(ctx context.Context, accountID uuid.UUID) ([]models.Transaction, error) {
+func (r *TransactionRepository) GetByAccountID(ctx context.Context, accountID string) ([]models.Transaction, error) {
 	var transactions []models.Transaction
 
 	cursor, err := r.collection.Find(ctx, bson.M{"accountID": accountID})
