@@ -60,24 +60,19 @@ func (h *TransactionHandler) CreateTransaction(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid account ID format"})
 		return
 	}
-
-	var account models.Account
-	if account, err = h.accountService.GetByID(context.Background(), accountUUID); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "account not found"})
-		return
-	}
-
-	if err := h.processTransaction(&newTransaction, account); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	//
+	// var account models.Account
+	// if account, err = h.accountService.GetByID(context.Background(), accountUUID); err != nil {
+	// 	c.JSON(http.StatusNotFound, gin.H{"error": "account not found"})
+	// 	return
+	// }
+	//
 	h.initializeTransaction(&newTransaction, accountUUID)
 
-	if err := h.transactionService.Create(c, &newTransaction); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create transaction"})
+	if err := h.transactionService.PublishTransactionEvent(c, &newTransaction); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to publish transaction event"})
 		return
 	}
-
 	c.JSON(http.StatusCreated, newTransaction)
 }
 

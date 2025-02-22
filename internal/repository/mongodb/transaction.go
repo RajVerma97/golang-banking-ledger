@@ -60,3 +60,14 @@ func (r *TransactionRepository) GetByAccountID(ctx context.Context, accountID st
 
 	return transactions, nil
 }
+
+func (r *TransactionRepository) Update(ctx context.Context, id string, tx *models.Transaction) error {
+	filter := bson.M{"_id": id}
+	update := bson.M{"$set": tx}
+
+	_, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("failed to update transaction: %w", err)
+	}
+	return nil
+}

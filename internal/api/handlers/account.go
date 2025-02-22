@@ -94,7 +94,7 @@ func (accountHandler *AccountHandler) UpdateAccount(c *gin.Context) {
 		return
 	}
 
-	if err := accountHandler.accountService.Update(c, id, updateData); err != nil {
+	if err := accountHandler.accountService.UpdateBalance(c, id, *updateData.Balance); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update account"})
 		return
 	}
