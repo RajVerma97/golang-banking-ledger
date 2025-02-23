@@ -27,5 +27,6 @@ Run:
 `go run cmd/main.go`
 
 ### **4. Access the Application at localhost:8080**
-### **5.NOTE ON CREDENTIAL**
- For local development, the .env file is included in the repository with example values. However, in production, you should never push the .env file to version control. Instead, use environment variables or a secure secrets management tool.
+### **5.ENVIRONMENT VARIABLES**
+ For **local development**, a `.env` file is included in the repository with placeholder values.
+**Important**: In a real production environment, never push the `.env` file to version control. Use environment variables or a secure secrets management tool instead.
