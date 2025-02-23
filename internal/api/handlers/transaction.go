@@ -30,17 +30,7 @@ func (h *TransactionHandler) GetTransactionByID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, transaction)
 }
-func (h *TransactionHandler) GetTransactionByAccountID(c *gin.Context) {
-	accountIDStr := c.Param("id")
 
-	transaction, err := h.transactionService.GetByAccountID(c, accountIDStr)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "transaction not found"})
-		return
-	}
-
-	c.JSON(http.StatusOK, transaction)
-}
 func (h *TransactionHandler) CreateTransaction(c *gin.Context) {
 	var newTransaction models.Transaction
 
@@ -92,4 +82,16 @@ func (h *TransactionHandler) initializeTransaction(transaction *models.Transacti
 	transaction.CreatedAt = time.Now()
 	transaction.UpdatedAt = time.Now()
 
+}
+
+func (h *TransactionHandler) GetTransactionHistory(c *gin.Context) {
+	accountID := c.Param("accountID")
+
+	transactions, err := h.transactionService.GetByAccountID(c, accountID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve transactions"})
+		return
+	}
+
+	c.JSON(http.StatusOK, transactions)
 }

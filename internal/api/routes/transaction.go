@@ -7,7 +7,6 @@ import (
 
 func TransactionRoutes(r *gin.Engine, transactionHandler *handlers.TransactionHandler) {
 	r.GET("/transaction/:id", transactionHandler.GetTransactionByID)
-	r.GET("/transaction/account/:id", transactionHandler.GetTransactionByAccountID)
 	r.POST("/transaction", transactionHandler.CreateTransaction)
 
 }
