@@ -19,8 +19,6 @@ type AccountRepository interface {
 	Create(ctx context.Context, account *models.Account) error
 	Update(ctx context.Context, id uuid.UUID, updates models.AccountUpdate) error
 	Delete(ctx context.Context, id uuid.UUID) error
-	Deposit(ctx context.Context, id uuid.UUID, amount float64) error
-	Withdraw(ctx context.Context, id uuid.UUID, amount float64) error
 }
 
 func NewAccountService(accountRepo AccountRepository) *AccountService {
@@ -61,16 +59,4 @@ func (s *AccountService) Delete(ctx context.Context, id uuid.UUID) error {
 	defer s.mutex.Unlock()
 	return s.accountRepo.Delete(ctx, id)
 
-}
-
-func (s *AccountService) Deposit(ctx context.Context, id uuid.UUID, amount float64) error {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	return s.accountRepo.Deposit(ctx, id, amount)
-}
-
-func (s *AccountService) Withdraw(ctx context.Context, id uuid.UUID, amount float64) error {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	return s.accountRepo.Withdraw(ctx, id, amount)
 }
