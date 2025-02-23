@@ -6,7 +6,6 @@ import (
 	"github.com/RajVerma97/golang-banking-ledger/internal/models"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"log"
 	"time"
 )
 
