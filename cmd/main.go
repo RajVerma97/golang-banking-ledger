@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/RajVerma97/golang-banking-ledger/internal/api/routes"
 	"github.com/RajVerma97/golang-banking-ledger/internal/db"
@@ -13,6 +14,7 @@ import (
 	"github.com/RajVerma97/golang-banking-ledger/pkg/queue"
 	"github.com/RajVerma97/golang-banking-ledger/pkg/worker"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 )
 
@@ -30,8 +32,17 @@ func main() {
 	router.Use(middleware.Logger(logger))
 	router.Use(gin.Recovery())
 
+	if err := godotenv.Load(); err != nil {
+		log.Println("Warning: No .env file found, using environment variables")
+	}
+
+	PORT := os.Getenv("PORT")
+	if PORT == "" {
+		PORT = "8080"
+	}
+
 	logger.Info("Server starting",
-		zap.String("port", "3000"),
+		zap.String("port", PORT),
 		zap.String("mode", gin.Mode()),
 	)
 
@@ -57,7 +68,7 @@ func main() {
 	}()
 
 	routes.Setup(router, accountService, transactionService)
-	PORT := 3000
-	fmt.Printf("Server Listening on Port %d", PORT)
-	router.Run(fmt.Sprintf(":%d", PORT))
+
+	fmt.Printf("Server Listening on Port %s\n", PORT)
+	router.Run(":" + PORT)
 }
