@@ -3,6 +3,7 @@ package mongodb
 import (
 	"context"
 	"fmt"
+
 	"github.com/RajVerma97/golang-banking-ledger/internal/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -65,9 +66,14 @@ func (r *TransactionRepository) Update(ctx context.Context, id string, tx *model
 	filter := bson.M{"_id": id}
 	update := bson.M{"$set": tx}
 
-	_, err := r.collection.UpdateOne(ctx, filter, update)
+	result, err := r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return fmt.Errorf("failed to update transaction: %w", err)
 	}
+
+	if result.MatchedCount == 0 {
+		return fmt.Errorf("transaction not found")
+	}
+
 	return nil
 }

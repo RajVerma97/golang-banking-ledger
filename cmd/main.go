@@ -46,7 +46,7 @@ func main() {
 		zap.String("mode", gin.Mode()),
 	)
 
-	postgresDB := db.InitPostgres()
+	postgresDB, _ := db.InitPostgres()
 	mongoDB, _, _ := db.InitMongo()
 
 	accountRepo := postgres.NewAccountRepository(postgresDB)

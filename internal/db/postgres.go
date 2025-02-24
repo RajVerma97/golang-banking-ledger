@@ -11,28 +11,30 @@ import (
 	"gorm.io/gorm"
 )
 
-func InitPostgres() *gorm.DB {
+func InitPostgres() (*gorm.DB, error) {
 	if err := godotenv.Load(); err != nil {
 		log.Println("Warning: No .env file found, using system environment variables.")
 	}
 
 	postgresURI := os.Getenv("POSTGRES_URI")
 	if postgresURI == "" {
-		log.Fatal("POSTGRES_URI is not set in environment variables")
+		return nil, fmt.Errorf("POSTGRES_URI is not set in environment variables")
 	}
 
 	db, err := gorm.Open(postgres.Open(postgresURI), &gorm.Config{})
 	if err != nil {
-		log.Fatal("Failed to connect to PostgreSQL:", err)
+		return nil, fmt.Errorf("failed to connect to PostgreSQL: %w", err)
 	}
 
 	if err := db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`).Error; err != nil {
-		log.Fatal("Failed to enable uuid-ossp extension:", err)
+		return nil, fmt.Errorf("failed to enable uuid-ossp extension: %w", err)
 	}
-	fmt.Println("Running Migrations...")
+
+	log.Println("Running Migrations...")
 	if err := db.AutoMigrate(&models.Account{}); err != nil {
-		log.Fatal("Migration failed: ", err)
+		return nil, fmt.Errorf("migration failed: %w", err)
 	}
-	fmt.Println(" Connected to PostgreSQL")
-	return db
+
+	log.Println("Connected to PostgreSQL")
+	return db, nil
 }

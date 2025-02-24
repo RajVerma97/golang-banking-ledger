@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 func InitRabbitMQ() (*amqp.Connection, *amqp.Channel, error) {
@@ -44,6 +44,21 @@ func InitRabbitMQ() (*amqp.Connection, *amqp.Channel, error) {
 	}
 
 	log.Println("RabbitMQ connected and queue declared")
-
 	return conn, ch, nil
+}
+
+type Publisher interface {
+	Publish(exchange, key string, mandatory, immediate bool, msg amqp.Publishing) error
+}
+
+type ChannelWrapper struct {
+	ch *amqp.Channel
+}
+
+func NewChannelWrapper(ch *amqp.Channel) *ChannelWrapper {
+	return &ChannelWrapper{ch: ch}
+}
+
+func (c *ChannelWrapper) Publish(exchange, key string, mandatory, immediate bool, msg amqp.Publishing) error {
+	return c.ch.Publish(exchange, key, mandatory, immediate, msg)
 }

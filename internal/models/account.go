@@ -1,8 +1,9 @@
 package models
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Account struct {
@@ -17,9 +18,9 @@ type Account struct {
 	UpdatedAt     time.Time `json:"updatedAt" gorm:"column:updated_at;autoUpdateTime"`
 }
 type AccountCreate struct {
-	FirstName string  `json:"firstName" binding:"required"`
+	FirstName string  `json:"firstName" validate:"required"`
 	LastName  string  `json:"lastName,omitempty"`
-	Email     string  `json:"email" binding:"required,email"`
+	Email     string  `json:"email" validate:"required,email"`
 	Phone     string  `json:"phone,omitempty"`
 	Balance   float64 `json:"balance,omitempty"`
 }

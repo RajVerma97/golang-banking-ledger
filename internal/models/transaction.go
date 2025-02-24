@@ -18,12 +18,12 @@ const (
 )
 
 type Transaction struct {
-	ID          string            `json:"id" bson:"_id,omitempty"`
-	Type        TransactionType   `json:"type" bson:"type"`
-	Amount      float64           `json:"amount" bson:"amount"`
-	AccountID   string            `json:"accountID" bson:"accountID"`
-	Status      TransactionStatus `json:"status" bson:"status"`
-	CreatedAt   time.Time         `json:"createdAt" bson:"createdAt"`
-	UpdatedAt   time.Time         `json:"updatedAt" bson:"updatedAt"`
+	ID          string            `json:"id" bson:"_id,omitempty" validate:"omitempty,uuid4"`
+	Type        TransactionType   `json:"type" bson:"type" validate:"required,oneof=DEPOSIT WITHDRAWL"`
+	Amount      float64           `json:"amount" bson:"amount" validate:"required,gt=0"`
+	AccountID   string            `json:"accountID" bson:"accountID" validate:"required"`
+	Status      TransactionStatus `json:"status" bson:"status" validate:"required,oneof=SUCCESS FAILED PENDING"`
+	CreatedAt   time.Time         `json:"createdAt" bson:"createdAt" validate:"required"`
+	UpdatedAt   time.Time         `json:"updatedAt" bson:"updatedAt" validate:"required"`
 	ProcessedAt time.Time         `json:"processedAt,omitempty" bson:"processedAt,omitempty"`
 }

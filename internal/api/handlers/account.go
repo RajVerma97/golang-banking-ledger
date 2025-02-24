@@ -12,18 +12,20 @@ import (
 )
 
 type AccountHandler struct {
-	accountService *service.AccountService
+	service service.AccountServiceInterface
 }
 
-func NewAccountHandler(accountService *service.AccountService) *AccountHandler {
-	return &AccountHandler{accountService: accountService}
+func NewAccountHandler(service service.AccountServiceInterface) *AccountHandler {
+	return &AccountHandler{
+		service: service,
+	}
 }
 func (accountHandler *AccountHandler) GetAccounts(c *gin.Context) {
 
-	accounts, err := accountHandler.accountService.GetAll(c)
+	accounts, err := accountHandler.service.GetAll(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch accounts"})
-
+		return
 	}
 	c.JSON(http.StatusOK, accounts)
 }
@@ -36,7 +38,7 @@ func (accountHandler *AccountHandler) GetAccountByID(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid account ID"})
 		return
 	}
-	account, err := accountHandler.accountService.GetByID(c, id)
+	account, err := accountHandler.service.GetByID(c, id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "account not found"})
 		return
@@ -63,7 +65,7 @@ func (accountHandler *AccountHandler) CreateAccount(c *gin.Context) {
 		UpdatedAt:     time.Now(),
 	}
 
-	if err := accountHandler.accountService.Create(c, &newAccount); err != nil {
+	if err := accountHandler.service.Create(c.Request.Context(), &newAccount); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create account"})
 		return
 	}
@@ -94,14 +96,13 @@ func (accountHandler *AccountHandler) UpdateAccount(c *gin.Context) {
 		return
 	}
 
-	if err := accountHandler.accountService.Update(c, id, updateData); err != nil {
+	if err := accountHandler.service.Update(c.Request.Context(), id, updateData); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update account"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "account updated successfully"})
 }
-
 func (accountHandler *AccountHandler) DeleteAccount(c *gin.Context) {
 	accountIDStr := c.Param("id")
 	id, err := uuid.Parse(accountIDStr)
@@ -110,7 +111,7 @@ func (accountHandler *AccountHandler) DeleteAccount(c *gin.Context) {
 		return
 	}
 
-	if err := accountHandler.accountService.Delete(c, id); err != nil {
+	if err := accountHandler.service.Delete(c.Request.Context(), id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete account"})
 		return
 	}

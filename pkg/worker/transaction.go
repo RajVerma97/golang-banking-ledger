@@ -12,7 +12,7 @@ import (
 	"github.com/RajVerma97/golang-banking-ledger/internal/repository/mongodb"
 	"github.com/RajVerma97/golang-banking-ledger/internal/repository/postgres"
 	"github.com/google/uuid"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type Worker struct {
@@ -21,7 +21,9 @@ type Worker struct {
 	transactionRepo *mongodb.TransactionRepository
 }
 
-func NewTransactionWorker(rabbitMQChannel *amqp.Channel, accountRepo *postgres.AccountRepository, transactionRepo *mongodb.TransactionRepository) *Worker {
+func NewTransactionWorker(rabbitMQChannel *amqp.Channel,
+	accountRepo *postgres.AccountRepository,
+	transactionRepo *mongodb.TransactionRepository) *Worker {
 	return &Worker{
 		rabbitMQChannel: rabbitMQChannel,
 		accountRepo:     accountRepo,
@@ -71,10 +73,17 @@ func (w *Worker) handleTransaction(tx *models.Transaction) error {
 		log.Printf("Transaction %s already processed with status %s", tx.ID, existingTx.Status)
 		return nil
 	}
-
-	account, err := w.accountRepo.GetByID(ctx, uuid.MustParse(tx.AccountID))
+	accountID, err := uuid.Parse(tx.AccountID)
 	if err != nil {
-		log.Printf("Account not found: %s", tx.AccountID)
+		log.Printf("Invalid account ID: %s, error: %v", tx.AccountID, err)
+		tx.Status = models.FAILED
+		w.updateTransaction(ctx, tx)
+		return fmt.Errorf("invalid account ID: %w", err)
+	}
+
+	account, err := w.accountRepo.GetByID(ctx, accountID)
+	if err != nil {
+		log.Printf("Account not found: %s", accountID)
 		tx.Status = models.FAILED
 		w.updateTransaction(ctx, tx)
 		return errors.New("account not found")

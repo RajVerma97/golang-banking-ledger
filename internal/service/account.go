@@ -20,6 +20,15 @@ type AccountRepository interface {
 	Update(ctx context.Context, id uuid.UUID, updates models.AccountUpdate) error
 	Delete(ctx context.Context, id uuid.UUID) error
 }
+type AccountServiceInterface interface {
+	GetAll(ctx context.Context) (models.Accounts, error)
+	GetByID(ctx context.Context, id uuid.UUID) (models.Account, error)
+	Create(ctx context.Context, account *models.Account) error
+	Update(ctx context.Context, id uuid.UUID, updates models.AccountUpdate) error
+	Delete(ctx context.Context, id uuid.UUID) error
+}
+
+var _ AccountServiceInterface = (*AccountService)(nil)
 
 func NewAccountService(accountRepo AccountRepository) *AccountService {
 
