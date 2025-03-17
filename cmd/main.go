@@ -69,6 +69,6 @@ func main() {
 
 	routes.Setup(router, accountService, transactionService)
 
-	fmt.Printf("Server Listening on Port testing new yes %s\n", PORT)
+	fmt.Printf("Server Listening on Port testing new yes and no from feature testing done in queue COOL and new it is %s\n", PORT)
 	router.Run(":" + PORT)
 }
